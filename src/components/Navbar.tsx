@@ -4,21 +4,11 @@ import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion } from "framer-motion";
-import {
-  Store,
-  Package,
-  BarChart3,
-  Moon,
-  Sun,
-  Home,
-  Languages,
-} from "lucide-react";
-import { useTheme } from "@/contexts/ThemeContext";
+import { Store, Package, BarChart3, Home, Languages } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function Navbar() {
   const pathname = usePathname();
-  const { theme, toggleTheme } = useTheme();
   const { language, setLanguage, t } = useLanguage();
 
   const links = [
@@ -29,7 +19,7 @@ export default function Navbar() {
   ];
 
   return (
-    <nav className="bg-white dark:bg-gray-800 shadow-lg sticky top-0 z-30 border-b border-gray-200 dark:border-gray-700">
+    <nav className="bg-slate-900 shadow-lg sticky top-0 z-30 border-b border-slate-700">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center space-x-8">
@@ -40,7 +30,7 @@ export default function Navbar() {
                 className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
                 <Store className="text-white" size={24} />
               </motion.div>
-              <span className="text-xl font-bold text-gray-900 dark:text-white">
+              <span className="text-xl font-bold text-white">
                 Ventas y Compras Leo
               </span>
             </Link>
@@ -57,7 +47,7 @@ export default function Navbar() {
                       className={`px-4 py-2 rounded-lg flex items-center space-x-2 transition-all ${
                         isActive
                           ? "bg-blue-600 text-white shadow-lg"
-                          : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                          : "text-slate-300 hover:bg-slate-800"
                       }`}>
                       <Icon size={18} />
                       <span className="font-medium">{link.label}</span>
@@ -73,24 +63,16 @@ export default function Navbar() {
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
               onClick={() => setLanguage(language === "en" ? "es" : "en")}
-              className="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-all"
+              className="p-2 rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 transition-all"
               title={language === "en" ? "Español" : "English"}>
               <Languages size={20} />
-            </motion.button>
-
-            <motion.button
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-              onClick={toggleTheme}
-              className="p-2 rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 transition-all">
-              {theme === "light" ? <Moon size={20} /> : <Sun size={20} />}
             </motion.button>
           </div>
         </div>
       </div>
 
       {/* Mobile Navigation */}
-      <div className="md:hidden border-t border-gray-200 dark:border-gray-700">
+      <div className="md:hidden border-t border-slate-700">
         <div className="flex justify-around py-2">
           {links.map((link) => {
             const Icon = link.icon;
@@ -99,9 +81,7 @@ export default function Navbar() {
               <Link key={link.href} href={link.href} className="flex-1">
                 <div
                   className={`flex flex-col items-center space-y-1 py-2 ${
-                    isActive
-                      ? "text-blue-600"
-                      : "text-gray-600 dark:text-gray-400"
+                    isActive ? "text-blue-500" : "text-slate-400"
                   }`}>
                   <Icon size={20} />
                   <span className="text-xs font-medium">{link.label}</span>
