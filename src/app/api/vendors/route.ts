@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { Prisma } from "@prisma/client";
+import { handlePrismaError } from "@/lib/prismaErrorHandler";
 
 export async function GET(request: NextRequest) {
   try {
@@ -33,26 +34,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(vendors);
   } catch (error) {
-    console.error("Error fetching vendors:", error);
-
-    // Log más detallado del error
-    if (error instanceof Error) {
-      console.error("Error message:", error.message);
-      console.error("Error stack:", error.stack);
-    }
-
-    return NextResponse.json(
-      {
-        error: "Failed to fetch vendors",
-        details:
-          process.env.NODE_ENV === "development"
-            ? error instanceof Error
-              ? error.message
-              : "Unknown error"
-            : undefined,
-      },
-      { status: 500 }
-    );
+    return handlePrismaError(error);
   }
 }
 
@@ -80,24 +62,7 @@ export async function POST(request: NextRequest) {
     });
 
     return NextResponse.json(vendor, { status: 201 });
-  } catch (error: unknown) {
-    console.error("Error creating vendor:", error);
-
-    if (
-      error &&
-      typeof error === "object" &&
-      "code" in error &&
-      error.code === "P2002"
-    ) {
-      return NextResponse.json(
-        { error: "Email already exists" },
-        { status: 409 }
-      );
-    }
-
-    return NextResponse.json(
-      { error: "Failed to create vendor" },
-      { status: 500 }
-    );
+  } catch (error) {
+    return handlePrismaError(error);
   }
 }

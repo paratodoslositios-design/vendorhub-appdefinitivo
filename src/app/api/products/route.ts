@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { Prisma } from "@prisma/client";
+import { handlePrismaError } from "@/lib/prismaErrorHandler";
 
 export async function GET(request: NextRequest) {
   try {
@@ -44,11 +45,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(products);
   } catch (error) {
-    console.error("Error fetching products:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch products" },
-      { status: 500 }
-    );
+    return handlePrismaError(error);
   }
 }
 
@@ -92,27 +89,7 @@ export async function POST(request: NextRequest) {
     });
 
     return NextResponse.json(product, { status: 201 });
-  } catch (error: unknown) {
-    console.error("Error creating product:", error);
-
-    if (error && typeof error === "object" && "code" in error) {
-      if (error.code === "P2002") {
-        return NextResponse.json(
-          { error: "SKU already exists" },
-          { status: 409 }
-        );
-      }
-      if (error.code === "P2003") {
-        return NextResponse.json(
-          { error: "Vendor not found" },
-          { status: 404 }
-        );
-      }
-    }
-
-    return NextResponse.json(
-      { error: "Failed to create product" },
-      { status: 500 }
-    );
+  } catch (error) {
+    return handlePrismaError(error);
   }
 }
