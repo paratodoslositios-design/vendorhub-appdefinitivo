@@ -5,12 +5,14 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { Eye, EyeOff } from "lucide-react";
 
 export default function LoginPage() {
   const [selectedUser, setSelectedUser] = useState<"admin" | "guest" | null>(
     null
   );
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
@@ -357,18 +359,39 @@ export default function LoginPage() {
                         }`}>
                         {t("Contraseña")}
                       </label>
-                      <input
-                        type="password"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        className={`w-full px-4 py-3 rounded-xl border-2 transition-all duration-300 ${
-                          isDark
-                            ? "bg-gray-800 border-gray-700 text-white focus:border-blue-500 focus:bg-gray-750"
-                            : "bg-white border-gray-200 text-gray-900 focus:border-blue-500 focus:bg-blue-50"
-                        } focus:outline-none focus:ring-4 focus:ring-blue-500/20`}
-                        placeholder={t("Ingresa tu contraseña")}
-                        autoFocus
-                      />
+                      <div className="relative">
+                        <input
+                          type={showPassword ? "text" : "password"}
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                          className={`w-full px-4 py-3 pr-12 rounded-xl border-2 transition-all duration-300 ${
+                            isDark
+                              ? "bg-gray-800 border-gray-700 text-white focus:border-blue-500 focus:bg-gray-750"
+                              : "bg-white border-gray-200 text-gray-900 focus:border-blue-500 focus:bg-blue-50"
+                          } focus:outline-none focus:ring-4 focus:ring-blue-500/20`}
+                          placeholder={t("Ingresa tu contraseña")}
+                          autoFocus
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPassword(!showPassword)}
+                          className={`absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-lg transition-all duration-200 ${
+                            isDark
+                              ? "hover:bg-gray-700 text-gray-400 hover:text-gray-200"
+                              : "hover:bg-gray-100 text-gray-500 hover:text-gray-700"
+                          }`}
+                          title={
+                            showPassword
+                              ? t("Ocultar contraseña")
+                              : t("Mostrar contraseña")
+                          }>
+                          {showPassword ? (
+                            <EyeOff size={20} />
+                          ) : (
+                            <Eye size={20} />
+                          )}
+                        </button>
+                      </div>
                     </div>
                   )}
 
