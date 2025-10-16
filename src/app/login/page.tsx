@@ -426,23 +426,6 @@ export default function LoginPage() {
                       t("Ingresar al Sistema")
                     )}
                   </button>
-
-                  {/* Info de credenciales */}
-                  {selectedUser === "admin" && (
-                    <div
-                      className={`p-4 rounded-xl ${
-                        isDark
-                          ? "bg-blue-500/10 border border-blue-500/20"
-                          : "bg-blue-50 border border-blue-200"
-                      }`}>
-                      <p
-                        className={`text-xs ${
-                          isDark ? "text-blue-300" : "text-blue-700"
-                        }`}>
-                        💡 {t("Usuario")}: admin | {t("Contraseña")}: admin123
-                      </p>
-                    </div>
-                  )}
                 </form>
               </div>
             </div>
