@@ -5,12 +5,13 @@
   "scripts": {
     "dev": "next dev --turbopack",
     "build": "prisma generate && next build",
-    "start": "next start",
+    "start": "npm run db:migrate && next start",
     "lint": "eslint",
     "postinstall": "prisma generate",
     "seed": "tsx prisma/seed.ts",
     "deploy": "prisma migrate deploy && npm run seed",
-    "verify-deploy": "node scripts/verify-deploy.js"
+    "verify-deploy": "node scripts/verify-deploy.js",
+    "db:migrate": "prisma migrate deploy || echo 'Migration failed but continuing...'"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
