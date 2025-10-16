@@ -34,8 +34,23 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(vendors);
   } catch (error) {
     console.error("Error fetching vendors:", error);
+
+    // Log más detallado del error
+    if (error instanceof Error) {
+      console.error("Error message:", error.message);
+      console.error("Error stack:", error.stack);
+    }
+
     return NextResponse.json(
-      { error: "Failed to fetch vendors" },
+      {
+        error: "Failed to fetch vendors",
+        details:
+          process.env.NODE_ENV === "development"
+            ? error instanceof Error
+              ? error.message
+              : "Unknown error"
+            : undefined,
+      },
       { status: 500 }
     );
   }

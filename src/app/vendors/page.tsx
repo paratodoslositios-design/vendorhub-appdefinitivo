@@ -19,6 +19,7 @@ export default function VendorsPage() {
   const [editingVendor, setEditingVendor] = useState<Vendor | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("");
+  const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -34,16 +35,24 @@ export default function VendorsPage() {
 
   const fetchVendors = async () => {
     setLoading(true);
+    setError(null);
     try {
       const params = new URLSearchParams();
       if (statusFilter) params.append("status", statusFilter);
       if (searchTerm) params.append("search", searchTerm);
 
       const res = await fetch(`/api/vendors?${params}`);
+      if (!res.ok) {
+        throw new Error(`HTTP error! status: ${res.status}`);
+      }
       const data = await res.json();
       setVendors(data);
+      setError(null);
     } catch (error) {
       console.error("Error fetching vendors:", error);
+      setError(
+        "Failed to load vendors. Please check your database connection."
+      );
     } finally {
       setLoading(false);
     }
@@ -174,6 +183,38 @@ export default function VendorsPage() {
         <div className="flex justify-center items-center h-64">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
         </div>
+      ) : error ? (
+        <Card className="bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800">
+          <div className="text-center py-12">
+            <div className="text-red-600 dark:text-red-400 mb-4">
+              <svg
+                className="mx-auto h-12 w-12"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                />
+              </svg>
+            </div>
+            <h3 className="text-lg font-semibold text-red-800 dark:text-red-300 mb-2">
+              Error de Conexión
+            </h3>
+            <p className="text-red-600 dark:text-red-400 mb-4">{error}</p>
+            <Button onClick={fetchVendors} variant="danger">
+              Reintentar
+            </Button>
+          </div>
+        </Card>
+      ) : vendors.length === 0 ? (
+        <Card>
+          <div className="text-center py-12 text-gray-600 dark:text-gray-400">
+            {t("common.noData")}
+          </div>
+        </Card>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {vendors.map((vendor, index) => (
@@ -253,7 +294,9 @@ export default function VendorsPage() {
       <Modal
         isOpen={isModalOpen}
         onClose={handleCloseModal}
-        title={editingVendor ? t("vendors.editVendor") : t("vendors.addVendor")}>
+        title={
+          editingVendor ? t("vendors.editVendor") : t("vendors.addVendor")
+        }>
         <form onSubmit={handleSubmit} className="space-y-4">
           <Input
             label={`${t("vendors.name")} *`}
@@ -318,7 +361,9 @@ export default function VendorsPage() {
               onClick={handleCloseModal}>
               {t("common.cancel")}
             </Button>
-            <Button type="submit">{editingVendor ? t("common.update") : t("common.create")}</Button>
+            <Button type="submit">
+              {editingVendor ? t("common.update") : t("common.create")}
+            </Button>
           </div>
         </form>
       </Modal>

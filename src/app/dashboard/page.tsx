@@ -29,6 +29,7 @@ export default function DashboardPage() {
   const [report, setReport] = useState<SalesReport | null>(null);
   const [vendors, setVendors] = useState<Vendor[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [filters, setFilters] = useState({
     startDate: "",
     endDate: "",
@@ -45,15 +46,23 @@ export default function DashboardPage() {
   const fetchVendors = async () => {
     try {
       const res = await fetch("/api/vendors");
+      if (!res.ok) {
+        throw new Error(`HTTP error! status: ${res.status}`);
+      }
       const data = await res.json();
       setVendors(data);
+      setError(null);
     } catch (error) {
       console.error("Error fetching vendors:", error);
+      setError(
+        "Failed to load vendors. Please check your database connection."
+      );
     }
   };
 
   const fetchReport = async () => {
     setLoading(true);
+    setError(null);
     try {
       const params = new URLSearchParams();
       Object.entries(filters).forEach(([key, value]) => {
@@ -61,10 +70,15 @@ export default function DashboardPage() {
       });
 
       const res = await fetch(`/api/reports?${params}`);
+      if (!res.ok) {
+        throw new Error(`HTTP error! status: ${res.status}`);
+      }
       const data = await res.json();
       setReport(data);
+      setError(null);
     } catch (error) {
       console.error("Error fetching report:", error);
+      setError("Failed to load report. Please check your database connection.");
     } finally {
       setLoading(false);
     }
@@ -182,6 +196,32 @@ export default function DashboardPage() {
         <div className="flex justify-center items-center h-64">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
         </div>
+      ) : error ? (
+        <Card className="bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800">
+          <div className="text-center py-12">
+            <div className="text-red-600 dark:text-red-400 mb-4">
+              <svg
+                className="mx-auto h-12 w-12"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor">
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                />
+              </svg>
+            </div>
+            <h3 className="text-lg font-semibold text-red-800 dark:text-red-300 mb-2">
+              Error de Conexión
+            </h3>
+            <p className="text-red-600 dark:text-red-400 mb-4">{error}</p>
+            <Button onClick={fetchReport} variant="danger">
+              Reintentar
+            </Button>
+          </div>
+        </Card>
       ) : report ? (
         <>
           {/* Stats Cards */}
@@ -245,7 +285,7 @@ export default function DashboardPage() {
                       {t("dashboard.inventoryValue")}
                     </p>
                     <p className="text-3xl font-bold text-gray-900 dark:text-white">
-                      ${report.totalValue.toLocaleString()}
+                      ${(report.totalValue || 0).toLocaleString()}
                     </p>
                   </div>
                   <div className="p-3 bg-yellow-100 dark:bg-yellow-900 rounded-lg">
