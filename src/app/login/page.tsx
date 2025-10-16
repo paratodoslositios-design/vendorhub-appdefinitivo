@@ -364,7 +364,7 @@ export default function LoginPage() {
                           type={showPassword ? "text" : "password"}
                           value={password}
                           onChange={(e) => setPassword(e.target.value)}
-                          className={`w-full px-4 py-3 pr-12 rounded-xl border-2 transition-all duration-300 ${
+                          className={`w-full px-4 py-3 pr-14 sm:pr-12 rounded-xl border-2 transition-all duration-300 ${
                             isDark
                               ? "bg-gray-800 border-gray-700 text-white focus:border-blue-500 focus:bg-gray-750"
                               : "bg-white border-gray-200 text-gray-900 focus:border-blue-500 focus:bg-blue-50"
@@ -375,20 +375,25 @@ export default function LoginPage() {
                         <button
                           type="button"
                           onClick={() => setShowPassword(!showPassword)}
-                          className={`absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-lg transition-all duration-200 ${
+                          className={`absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 p-2.5 sm:p-2 rounded-lg transition-all duration-200 touch-manipulation ${
                             isDark
-                              ? "hover:bg-gray-700 text-gray-400 hover:text-gray-200"
-                              : "hover:bg-gray-100 text-gray-500 hover:text-gray-700"
+                              ? "hover:bg-gray-700 active:bg-gray-600 text-gray-400 hover:text-gray-200"
+                              : "hover:bg-gray-100 active:bg-gray-200 text-gray-500 hover:text-gray-700"
                           }`}
                           title={
                             showPassword
                               ? t("Ocultar contraseña")
                               : t("Mostrar contraseña")
+                          }
+                          aria-label={
+                            showPassword
+                              ? t("Ocultar contraseña")
+                              : t("Mostrar contraseña")
                           }>
                           {showPassword ? (
-                            <EyeOff size={20} />
+                            <EyeOff size={22} className="sm:w-5 sm:h-5" />
                           ) : (
-                            <Eye size={20} />
+                            <Eye size={22} className="sm:w-5 sm:h-5" />
                           )}
                         </button>
                       </div>
