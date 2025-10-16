@@ -130,6 +130,48 @@ export default function Navbar() {
 
       {/* Mobile Navigation */}
       <div className="md:hidden border-t border-slate-700">
+        {/* User Info Mobile */}
+        <div className="px-4 py-3 bg-slate-800 border-b border-slate-700">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div
+                className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                  isAdmin
+                    ? "bg-gradient-to-r from-blue-500 to-purple-600"
+                    : "bg-gradient-to-r from-green-500 to-emerald-600"
+                }`}>
+                {isAdmin ? (
+                  <Shield size={16} className="text-white" />
+                ) : (
+                  <Eye size={16} className="text-white" />
+                )}
+              </div>
+              <div className="flex flex-col">
+                <span className="text-xs text-slate-400">{t("Usuario")}</span>
+                <span className="text-sm font-semibold text-white">
+                  {user?.displayName}
+                </span>
+              </div>
+              {isGuest && (
+                <span className="ml-2 px-2 py-1 text-xs bg-yellow-500/20 text-yellow-400 rounded-md border border-yellow-500/30">
+                  {t("Solo lectura")}
+                </span>
+              )}
+            </div>
+            {/* Logout Button Mobile */}
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={handleLogout}
+              className="flex items-center gap-2 px-3 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white transition-all"
+              title={t("Cerrar sesión")}>
+              <LogOut size={16} />
+              <span className="text-sm font-medium">{t("Salir")}</span>
+            </motion.button>
+          </div>
+        </div>
+
+        {/* Navigation Links Mobile */}
         <div className="flex justify-around py-2">
           {links.map((link) => {
             const Icon = link.icon;
