@@ -120,6 +120,25 @@ export function handlePrismaError(error: unknown): NextResponse {
       );
     }
 
+    // P2021: La tabla no existe en la base de datos
+    if (error.code === "P2021") {
+      const tableName = error.meta?.table as string | undefined;
+      return NextResponse.json(
+        {
+          error: "Las tablas de la base de datos no existen",
+          code: error.code,
+          table: tableName,
+          details:
+            process.env.NODE_ENV === "development"
+              ? `Ejecuta 'npx prisma migrate deploy' para crear la tabla ${
+                  tableName || "requerida"
+                }`
+              : "La base de datos necesita ser inicializada. Contacta al administrador.",
+        },
+        { status: 503 }
+      );
+    }
+
     // P2025: Registro no encontrado
     if (error.code === "P2025") {
       return NextResponse.json(
