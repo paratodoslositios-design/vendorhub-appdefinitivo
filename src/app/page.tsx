@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import {
@@ -16,10 +17,19 @@ import {
 } from "lucide-react";
 import Button from "@/components/Button";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function LandingPage() {
   const router = useRouter();
   const { t } = useLanguage();
+  const { isAuthenticated } = useAuth();
+
+  useEffect(() => {
+    // Redirigir al login si no está autenticado
+    if (!isAuthenticated) {
+      router.push("/login");
+    }
+  }, [isAuthenticated, router]);
 
   const features = [
     {

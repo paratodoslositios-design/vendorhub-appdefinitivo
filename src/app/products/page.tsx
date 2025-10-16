@@ -18,10 +18,13 @@ import Modal from "@/components/Modal";
 import Input from "@/components/Input";
 import Select from "@/components/Select";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useAuth } from "@/contexts/AuthContext";
+import ProtectedRoute from "@/components/ProtectedRoute";
 import type { Product, Vendor } from "@/types";
 
 export default function ProductsPage() {
   const { t } = useLanguage();
+  const { canCreate, canEdit, canDelete } = useAuth();
   const [products, setProducts] = useState<Product[]>([]);
   const [vendors, setVendors] = useState<Vendor[]>([]);
   const [loading, setLoading] = useState(true);
@@ -205,7 +208,7 @@ export default function ProductsPage() {
             {t("products.subtitle")}
           </p>
         </div>
-        <Button onClick={() => handleOpenModal()}>
+        <Button onClick={() => handleOpenModal()} disabled={!canCreate}>
           <Plus size={20} className="mr-2" />
           {t("products.addProduct")}
         </Button>
@@ -287,12 +290,22 @@ export default function ProductsPage() {
                   <div className="flex gap-1">
                     <button
                       onClick={() => handleOpenModal(product)}
-                      className="p-1.5 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg">
+                      disabled={!canEdit}
+                      className={`p-1.5 rounded-lg transition-colors ${
+                        canEdit
+                          ? "text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                          : "text-gray-400 cursor-not-allowed"
+                      }`}>
                       <Edit size={16} />
                     </button>
                     <button
                       onClick={() => handleDelete(product.id)}
-                      className="p-1.5 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg">
+                      disabled={!canDelete}
+                      className={`p-1.5 rounded-lg transition-colors ${
+                        canDelete
+                          ? "text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
+                          : "text-gray-400 cursor-not-allowed"
+                      }`}>
                       <Trash2 size={16} />
                     </button>
                   </div>

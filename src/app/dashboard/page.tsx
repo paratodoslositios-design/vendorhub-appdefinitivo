@@ -21,11 +21,14 @@ import Input from "@/components/Input";
 import Select from "@/components/Select";
 import Button from "@/components/Button";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useAuth } from "@/contexts/AuthContext";
+import ProtectedRoute from "@/components/ProtectedRoute";
 import type { SalesReport, Vendor } from "@/types";
 import { exportReportToPDF } from "@/lib/pdfExport";
 
 export default function DashboardPage() {
   const { t } = useLanguage();
+  const { isAuthenticated } = useAuth();
   const [report, setReport] = useState<SalesReport | null>(null);
   const [vendors, setVendors] = useState<Vendor[]>([]);
   const [loading, setLoading] = useState(true);

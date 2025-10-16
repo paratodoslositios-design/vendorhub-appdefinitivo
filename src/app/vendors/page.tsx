@@ -9,10 +9,13 @@ import Modal from "@/components/Modal";
 import Input from "@/components/Input";
 import Select from "@/components/Select";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useAuth } from "@/contexts/AuthContext";
+import ProtectedRoute from "@/components/ProtectedRoute";
 import type { Vendor } from "@/types";
 
 export default function VendorsPage() {
   const { t } = useLanguage();
+  const { canCreate, canEdit, canDelete, isGuest } = useAuth();
   const [vendors, setVendors] = useState<Vendor[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -146,7 +149,7 @@ export default function VendorsPage() {
             {t("vendors.subtitle")}
           </p>
         </div>
-        <Button onClick={() => handleOpenModal()}>
+        <Button onClick={() => handleOpenModal()} disabled={!canCreate}>
           <Plus size={20} className="mr-2" />
           {t("vendors.addVendor")}
         </Button>
@@ -241,12 +244,22 @@ export default function VendorsPage() {
                   <div className="flex gap-2">
                     <button
                       onClick={() => handleOpenModal(vendor)}
-                      className="p-2 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg">
+                      disabled={!canEdit}
+                      className={`p-2 rounded-lg transition-colors ${
+                        canEdit
+                          ? "text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20"
+                          : "text-gray-400 cursor-not-allowed"
+                      }`}>
                       <Edit size={18} />
                     </button>
                     <button
                       onClick={() => handleDelete(vendor.id)}
-                      className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg">
+                      disabled={!canDelete}
+                      className={`p-2 rounded-lg transition-colors ${
+                        canDelete
+                          ? "text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20"
+                          : "text-gray-400 cursor-not-allowed"
+                      }`}>
                       <Trash2 size={18} />
                     </button>
                   </div>

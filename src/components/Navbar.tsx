@@ -2,14 +2,32 @@
 
 import React from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { Store, Package, BarChart3, Home, Languages } from "lucide-react";
+import {
+  Store,
+  Package,
+  BarChart3,
+  Home,
+  Languages,
+  LogOut,
+  User,
+  Shield,
+  Eye,
+} from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function Navbar() {
   const pathname = usePathname();
+  const router = useRouter();
   const { language, setLanguage, t } = useLanguage();
+  const { user, logout, isAdmin, isGuest } = useAuth();
+
+  const handleLogout = () => {
+    logout();
+    router.push("/login");
+  };
 
   const links = [
     { href: "/", label: t("nav.home"), icon: Home },
@@ -58,7 +76,35 @@ export default function Navbar() {
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
+            {/* User Info */}
+            <div className="hidden md:flex items-center gap-2 px-3 py-2 rounded-lg bg-slate-800">
+              <div
+                className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                  isAdmin
+                    ? "bg-gradient-to-r from-blue-500 to-purple-600"
+                    : "bg-gradient-to-r from-green-500 to-emerald-600"
+                }`}>
+                {isAdmin ? (
+                  <Shield size={16} className="text-white" />
+                ) : (
+                  <Eye size={16} className="text-white" />
+                )}
+              </div>
+              <div className="flex flex-col">
+                <span className="text-xs text-slate-400">{t("Usuario")}</span>
+                <span className="text-sm font-semibold text-white">
+                  {user?.displayName}
+                </span>
+              </div>
+              {isGuest && (
+                <span className="ml-2 px-2 py-1 text-xs bg-yellow-500/20 text-yellow-400 rounded-md border border-yellow-500/30">
+                  {t("Solo lectura")}
+                </span>
+              )}
+            </div>
+
+            {/* Language Toggle */}
             <motion.button
               whileHover={{ scale: 1.1 }}
               whileTap={{ scale: 0.9 }}
@@ -66,6 +112,17 @@ export default function Navbar() {
               className="p-2 rounded-lg bg-slate-800 text-slate-300 hover:bg-slate-700 transition-all"
               title={language === "en" ? "Español" : "English"}>
               <Languages size={20} />
+            </motion.button>
+
+            {/* Logout Button */}
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={handleLogout}
+              className="hidden md:flex items-center gap-2 px-4 py-2 rounded-lg bg-red-600 hover:bg-red-700 text-white transition-all"
+              title={t("Cerrar sesión")}>
+              <LogOut size={18} />
+              <span className="font-medium">{t("Salir")}</span>
             </motion.button>
           </div>
         </div>
