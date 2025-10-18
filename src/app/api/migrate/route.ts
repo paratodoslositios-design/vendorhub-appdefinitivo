@@ -10,45 +10,68 @@ export async function GET(request: NextRequest) {
   }
 
   try {
-    // Verificar si la columna cost existe
-    const result = await prisma.$queryRaw`
-      SELECT column_name 
-      FROM information_schema.columns 
-      WHERE table_name = 'Product' 
-      AND column_name = 'cost'
-    `;
+    const results = [];
 
-    if (Array.isArray(result) && result.length > 0) {
-      return NextResponse.json({
-        message: "La columna 'cost' ya existe en la tabla Product",
-      });
+    // Verificar y agregar columna cost en Product si no existe
+    try {
+      const costResult = await prisma.$queryRaw`
+        SELECT column_name 
+        FROM information_schema.columns 
+        WHERE table_name = 'Product' 
+        AND column_name = 'cost'
+      `;
+
+      if (!Array.isArray(costResult) || costResult.length === 0) {
+        await prisma.$executeRaw`
+          ALTER TABLE "Product" 
+          ADD COLUMN "cost" REAL
+        `;
+        results.push("Columna 'cost' agregada a la tabla Product");
+      } else {
+        results.push("La columna 'cost' ya existe en la tabla Product");
+      }
+    } catch (error) {
+      const typedError = error as Error;
+      if (!typedError.message?.includes("already exists")) {
+        throw typedError;
+      }
+      results.push("La columna 'cost' ya existe en la tabla Product");
     }
 
-    // Si no existe, intentar agregarla
-    await prisma.$executeRaw`
-      ALTER TABLE "Product" 
-      ADD COLUMN "cost" REAL
-    `;
+    // Verificar y agregar columna taxId en Vendor si no existe
+    try {
+      const taxIdResult = await prisma.$queryRaw`
+        SELECT column_name 
+        FROM information_schema.columns 
+        WHERE table_name = 'Vendor' 
+        AND column_name = 'taxId'
+      `;
+
+      if (!Array.isArray(taxIdResult) || taxIdResult.length === 0) {
+        await prisma.$executeRaw`
+          ALTER TABLE "Vendor" 
+          ADD COLUMN "taxId" TEXT
+        `;
+        results.push("Columna 'taxId' agregada a la tabla Vendor");
+      } else {
+        results.push("La columna 'taxId' ya existe en la tabla Vendor");
+      }
+    } catch (error) {
+      const typedError = error as Error;
+      if (!typedError.message?.includes("already exists")) {
+        throw typedError;
+      }
+      results.push("La columna 'taxId' ya existe en la tabla Vendor");
+    }
 
     return NextResponse.json({
-      message: "Columna 'cost' agregada exitosamente a la tabla Product",
+      message: "Migración completada exitosamente",
+      results,
     });
   } catch (error) {
     console.error("Error en migración:", error);
 
-    // Verificar si es un error con mensaje
     const typedError = error as Error;
-
-    // Si el error es porque la columna ya existe, retornar éxito
-    if (
-      typedError.message?.includes("column") &&
-      typedError.message?.includes("already exists")
-    ) {
-      return NextResponse.json({
-        message: "La columna 'cost' ya existe (no se realizó ningún cambio)",
-      });
-    }
-
     return NextResponse.json(
       {
         error: "Error al ejecutar migración",
