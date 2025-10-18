@@ -5,13 +5,15 @@ import React from "react";
 interface SelectProps extends React.SelectHTMLAttributes<HTMLSelectElement> {
   label?: string;
   error?: string;
-  options: { value: string; label: string }[];
+  options?: { value: string; label: string }[];
+  children?: React.ReactNode;
 }
 
 export default function Select({
   label,
   error,
   options,
+  children,
   className = "",
   ...props
 }: SelectProps) {
@@ -29,11 +31,13 @@ export default function Select({
           disabled:bg-gray-100 dark:disabled:bg-gray-800 disabled:cursor-not-allowed
           transition-all ${error ? "border-red-500" : ""} ${className}`}
         {...props}>
-        {options.map((option) => (
-          <option key={option.value} value={option.value}>
-            {option.label}
-          </option>
-        ))}
+        {children
+          ? children
+          : options?.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
       </select>
       {error && (
         <p className="mt-1 text-sm text-red-600 dark:text-red-400">{error}</p>

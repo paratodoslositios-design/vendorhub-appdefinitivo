@@ -6,35 +6,184 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
+// User model for authentication and authorization
+model User {
+  id            String         @id @default(uuid())
+  email         String         @unique
+  password      String         // Hashed password
+  name          String
+  role          String         @default("viewer") // admin, vendor, viewer
+  status        String         @default("active") // active, inactive, suspended
+  avatar        String?
+  lastLogin     DateTime?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  sales         Sale[]         @relation("SalesCreatedBy")
+  purchases     Purchase[]     @relation("PurchasesCreatedBy")
+  notifications Notification[]
+  auditLogs     AuditLog[]
+}
+
 model Vendor {
-  id          String    @id @default(uuid())
-  name        String
-  email       String    @unique
-  phone       String?
-  address     String?
-  description String?
-  status      String    @default("active") // active, inactive
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  products    Product[]
+  id                String              @id @default(uuid())
+  name              String
+  email             String              @unique
+  phone             String?
+  address           String?
+  description       String?
+  status            String              @default("active") // active, inactive
+  taxId             String?             // Tax ID / RUC
+  website           String?
+  rating            Float               @default(0)
+  totalPurchases    Float               @default(0)
+  totalSales        Float               @default(0) // Track sales from this vendor
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  products          Product[]
+  purchases         Purchase[]
+  sales             Sale[]              @relation("SalesFromVendor")
+  inventoryMovements InventoryMovement[]
 }
 
 model Product {
+  id                 String              @id @default(uuid())
+  name               String
+  description        String?
+  price              Float
+  cost               Float?              // Cost price for profit calculation
+  stock              Int                 @default(0)
+  minStock           Int                 @default(10) // Alert threshold
+  maxStock           Int                 @default(1000)
+  sku                String              @unique
+  barcode            String?             @unique
+  category           String
+  status             String              @default("available") // available, out_of_stock, discontinued
+  image              String?
+  vendorId           String
+  vendor             Vendor              @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @updatedAt
+  saleItems          SaleItem[]
+  purchaseItems      PurchaseItem[]
+  inventoryMovements InventoryMovement[]
+}
+
+// Sales model
+model Sale {
+  id              String     @id @default(uuid())
+  saleNumber      String     @unique // AUTO-001, AUTO-002
+  vendorId        String?    // Vendor from which products are sold
+  vendor          Vendor?    @relation("SalesFromVendor", fields: [vendorId], references: [id])
+  customerId      String?    // Customer ID (optional)
+  customerName    String
+  customerEmail   String?
+  customerPhone   String?
+  subtotal        Float
+  tax             Float      @default(0)
+  discount        Float      @default(0)
+  total           Float
+  paymentMethod   String     // cash, card, transfer, credit
+  paymentStatus   String     @default("pending") // pending, paid, partial, cancelled
+  status          String     @default("completed") // draft, completed, cancelled, refunded
+  notes           String?
+  createdById     String
+  createdBy       User       @relation("SalesCreatedBy", fields: [createdById], references: [id])
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+  items           SaleItem[]
+}
+
+model SaleItem {
+  id         String   @id @default(uuid())
+  saleId     String
+  sale       Sale     @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  productId  String
+  product    Product  @relation(fields: [productId], references: [id])
+  quantity   Int
+  unitPrice  Float
+  discount   Float    @default(0)
+  subtotal   Float
+  createdAt  DateTime @default(now())
+}
+
+// Purchases model
+model Purchase {
+  id              String         @id @default(uuid())
+  purchaseNumber  String         @unique // COMP-001, COMP-002
+  vendorId        String
+  vendor          Vendor         @relation(fields: [vendorId], references: [id])
+  subtotal        Float
+  tax             Float          @default(0)
+  discount        Float          @default(0)
+  total           Float
+  paymentMethod   String         // cash, card, transfer, credit
+  paymentStatus   String         @default("pending") // pending, paid, partial
+  status          String         @default("completed") // draft, completed, cancelled
+  invoiceNumber   String?
+  dueDate         DateTime?
+  notes           String?
+  createdById     String
+  createdBy       User           @relation("PurchasesCreatedBy", fields: [createdById], references: [id])
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  items           PurchaseItem[]
+}
+
+model PurchaseItem {
+  id         String   @id @default(uuid())
+  purchaseId String
+  purchase   Purchase @relation(fields: [purchaseId], references: [id], onDelete: Cascade)
+  productId  String
+  product    Product  @relation(fields: [productId], references: [id])
+  quantity   Int
+  unitCost   Float
+  subtotal   Float
+  createdAt  DateTime @default(now())
+}
+
+// Inventory movements
+model InventoryMovement {
+  id            String   @id @default(uuid())
+  productId     String
+  product       Product  @relation(fields: [productId], references: [id])
+  vendorId      String?
+  vendor        Vendor?  @relation(fields: [vendorId], references: [id])
+  type          String   // in, out, adjustment, return
+  quantity      Int
+  previousStock Int
+  newStock      Int
+  reason        String?
+  reference     String?  // Sale/Purchase number
+  createdAt     DateTime @default(now())
+}
+
+// Notifications
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String   // info, warning, error, success
+  title     String
+  message   String
+  read      Boolean  @default(false)
+  link      String?
+  createdAt DateTime @default(now())
+}
+
+// Audit logs
+model AuditLog {
   id          String   @id @default(uuid())
-  name        String
-  description String?
-  price       Float
-  stock       Int      @default(0)
-  sku         String   @unique
-  category    String
-  status      String   @default("available") // available, out_of_stock, discontinued
-  image       String?  // Base64 encoded image or URL
-  vendorId    String
-  vendor      Vendor   @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  action      String   // CREATE, UPDATE, DELETE, LOGIN, LOGOUT
+  entityType  String   // User, Vendor, Product, Sale, Purchase
+  entityId    String?
+  details     String?  // JSON string with details
+  ipAddress   String?
+  userAgent   String?
   createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
 }

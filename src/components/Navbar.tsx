@@ -14,6 +14,9 @@ import {
   User,
   Shield,
   Eye,
+  ShoppingCart,
+  ShoppingBag,
+  Bell,
 } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -34,6 +37,8 @@ export default function Navbar() {
     { href: "/dashboard", label: t("nav.dashboard"), icon: BarChart3 },
     { href: "/vendors", label: t("nav.vendors"), icon: Store },
     { href: "/products", label: t("nav.products"), icon: Package },
+    { href: "/sales", label: "Ventas", icon: ShoppingCart },
+    { href: "/purchases", label: "Compras", icon: ShoppingBag },
   ];
 
   return (
