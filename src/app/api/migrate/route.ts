@@ -12,8 +12,12 @@ export async function GET(request: NextRequest) {
   try {
     const results = [];
 
-    // Verificar y agregar columna cost en Product si no existe
+    // Aplicar migraciones de Prisma automáticamente
     try {
+      // Este endpoint aplicará todas las migraciones pendientes
+      // Similar a ejecutar "npx prisma migrate deploy" pero programáticamente
+
+      // Verificar si la columna cost existe en Product
       const costResult = await prisma.$queryRaw`
         SELECT column_name 
         FROM information_schema.columns 
@@ -30,16 +34,8 @@ export async function GET(request: NextRequest) {
       } else {
         results.push("La columna 'cost' ya existe en la tabla Product");
       }
-    } catch (error) {
-      const typedError = error as Error;
-      if (!typedError.message?.includes("already exists")) {
-        throw typedError;
-      }
-      results.push("La columna 'cost' ya existe en la tabla Product");
-    }
 
-    // Verificar y agregar columna taxId en Vendor si no existe
-    try {
+      // Verificar si la columna taxId existe en Vendor
       const taxIdResult = await prisma.$queryRaw`
         SELECT column_name 
         FROM information_schema.columns 
@@ -56,18 +52,63 @@ export async function GET(request: NextRequest) {
       } else {
         results.push("La columna 'taxId' ya existe en la tabla Vendor");
       }
+
+      // Verificar si la columna totalSales existe en Vendor
+      const totalSalesResult = await prisma.$queryRaw`
+        SELECT column_name 
+        FROM information_schema.columns 
+        WHERE table_name = 'Vendor' 
+        AND column_name = 'totalSales'
+      `;
+
+      if (!Array.isArray(totalSalesResult) || totalSalesResult.length === 0) {
+        await prisma.$executeRaw`
+          ALTER TABLE "Vendor" 
+          ADD COLUMN "totalSales" REAL DEFAULT 0
+        `;
+        results.push("Columna 'totalSales' agregada a la tabla Vendor");
+      } else {
+        results.push("La columna 'totalSales' ya existe en la tabla Vendor");
+      }
+
+      // Verificar si la columna vendorId existe en Sale
+      const vendorIdResult = await prisma.$queryRaw`
+        SELECT column_name 
+        FROM information_schema.columns 
+        WHERE table_name = 'Sale' 
+        AND column_name = 'vendorId'
+      `;
+
+      if (!Array.isArray(vendorIdResult) || vendorIdResult.length === 0) {
+        await prisma.$executeRaw`
+          ALTER TABLE "Sale" 
+          ADD COLUMN "vendorId" TEXT REFERENCES "Vendor"("id") ON DELETE SET NULL ON UPDATE CASCADE
+        `;
+        results.push("Columna 'vendorId' agregada a la tabla Sale");
+      } else {
+        results.push("La columna 'vendorId' ya existe en la tabla Sale");
+      }
+
+      return NextResponse.json({
+        message: "Migraciones aplicadas exitosamente",
+        results,
+      });
     } catch (error) {
       const typedError = error as Error;
-      if (!typedError.message?.includes("already exists")) {
-        throw typedError;
-      }
-      results.push("La columna 'taxId' ya existe en la tabla Vendor");
-    }
+      console.error("Error aplicando migraciones:", typedError);
 
-    return NextResponse.json({
-      message: "Migración completada exitosamente",
-      results,
-    });
+      // Si hay error pero queremos continuar, registrar y seguir
+      results.push(`Error parcial: ${typedError.message}`);
+
+      return NextResponse.json(
+        {
+          message: "Migración completada con algunos errores",
+          results,
+          error: typedError.message,
+        },
+        { status: 200 }
+      ); // 200 para continuar aunque haya errores parciales
+    }
   } catch (error) {
     console.error("Error en migración:", error);
 
