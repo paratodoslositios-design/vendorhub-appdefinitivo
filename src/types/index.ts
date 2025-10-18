@@ -244,6 +244,8 @@ export interface CreateVendorInput {
   address?: string;
   description?: string;
   status?: string;
+  taxId?: string;
+  website?: string;
 }
 
 export interface UpdateVendorInput {
@@ -253,12 +255,15 @@ export interface UpdateVendorInput {
   address?: string;
   description?: string;
   status?: string;
+  taxId?: string;
+  website?: string;
 }
 
 export interface CreateProductInput {
   name: string;
   description?: string;
   price: number;
+  cost?: number;
   stock: number;
   sku: string;
   category: string;
@@ -271,6 +276,7 @@ export interface UpdateProductInput {
   name?: string;
   description?: string;
   price?: number;
+  cost?: number;
   stock?: number;
   sku?: string;
   category?: string;
