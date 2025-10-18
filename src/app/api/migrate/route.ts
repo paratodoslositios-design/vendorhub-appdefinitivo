@@ -33,13 +33,16 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       message: "Columna 'cost' agregada exitosamente a la tabla Product",
     });
-  } catch (error: unknown) {
+  } catch (error) {
     console.error("Error en migración:", error);
+
+    // Verificar si es un error con mensaje
+    const typedError = error as Error;
 
     // Si el error es porque la columna ya existe, retornar éxito
     if (
-      error.message?.includes("column") &&
-      error.message?.includes("already exists")
+      typedError.message?.includes("column") &&
+      typedError.message?.includes("already exists")
     ) {
       return NextResponse.json({
         message: "La columna 'cost' ya existe (no se realizó ningún cambio)",
@@ -49,7 +52,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json(
       {
         error: "Error al ejecutar migración",
-        details: error.message,
+        details: typedError.message,
       },
       { status: 500 }
     );
