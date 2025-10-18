@@ -11,12 +11,10 @@ export async function GET(request: NextRequest) {
 
   try {
     const results = [];
+    const warnings = [];
 
-    // Aplicar migraciones de Prisma automáticamente
+    // Verificar estado actual de la base de datos
     try {
-      // Este endpoint aplicará todas las migraciones pendientes
-      // Similar a ejecutar "npx prisma migrate deploy" pero programáticamente
-
       // Verificar si la columna cost existe en Product
       const costResult = await prisma.$queryRaw`
         SELECT column_name 
@@ -26,13 +24,24 @@ export async function GET(request: NextRequest) {
       `;
 
       if (!Array.isArray(costResult) || costResult.length === 0) {
-        await prisma.$executeRaw`
-          ALTER TABLE "Product" 
-          ADD COLUMN "cost" REAL
-        `;
-        results.push("Columna 'cost' agregada a la tabla Product");
+        try {
+          await prisma.$executeRaw`
+            ALTER TABLE "Product" 
+            ADD COLUMN "cost" REAL
+          `;
+          results.push("✅ Columna 'cost' agregada a la tabla Product");
+        } catch (columnError) {
+          const typedError = columnError as Error;
+          if (!typedError.message?.includes("already exists")) {
+            warnings.push(
+              `⚠️ Error al agregar columna 'cost': ${typedError.message}`
+            );
+          } else {
+            results.push("✅ La columna 'cost' ya existe en la tabla Product");
+          }
+        }
       } else {
-        results.push("La columna 'cost' ya existe en la tabla Product");
+        results.push("✅ La columna 'cost' ya existe en la tabla Product");
       }
 
       // Verificar si la columna taxId existe en Vendor
@@ -44,13 +53,24 @@ export async function GET(request: NextRequest) {
       `;
 
       if (!Array.isArray(taxIdResult) || taxIdResult.length === 0) {
-        await prisma.$executeRaw`
-          ALTER TABLE "Vendor" 
-          ADD COLUMN "taxId" TEXT
-        `;
-        results.push("Columna 'taxId' agregada a la tabla Vendor");
+        try {
+          await prisma.$executeRaw`
+            ALTER TABLE "Vendor" 
+            ADD COLUMN "taxId" TEXT
+          `;
+          results.push("✅ Columna 'taxId' agregada a la tabla Vendor");
+        } catch (columnError) {
+          const typedError = columnError as Error;
+          if (!typedError.message?.includes("already exists")) {
+            warnings.push(
+              `⚠️ Error al agregar columna 'taxId': ${typedError.message}`
+            );
+          } else {
+            results.push("✅ La columna 'taxId' ya existe en la tabla Vendor");
+          }
+        }
       } else {
-        results.push("La columna 'taxId' ya existe en la tabla Vendor");
+        results.push("✅ La columna 'taxId' ya existe en la tabla Vendor");
       }
 
       // Verificar si la columna totalSales existe en Vendor
@@ -62,13 +82,26 @@ export async function GET(request: NextRequest) {
       `;
 
       if (!Array.isArray(totalSalesResult) || totalSalesResult.length === 0) {
-        await prisma.$executeRaw`
-          ALTER TABLE "Vendor" 
-          ADD COLUMN "totalSales" REAL DEFAULT 0
-        `;
-        results.push("Columna 'totalSales' agregada a la tabla Vendor");
+        try {
+          await prisma.$executeRaw`
+            ALTER TABLE "Vendor" 
+            ADD COLUMN "totalSales" REAL DEFAULT 0
+          `;
+          results.push("✅ Columna 'totalSales' agregada a la tabla Vendor");
+        } catch (columnError) {
+          const typedError = columnError as Error;
+          if (!typedError.message?.includes("already exists")) {
+            warnings.push(
+              `⚠️ Error al agregar columna 'totalSales': ${typedError.message}`
+            );
+          } else {
+            results.push(
+              "✅ La columna 'totalSales' ya existe en la tabla Vendor"
+            );
+          }
+        }
       } else {
-        results.push("La columna 'totalSales' ya existe en la tabla Vendor");
+        results.push("✅ La columna 'totalSales' ya existe en la tabla Vendor");
       }
 
       // Verificar si la columna vendorId existe en Sale
@@ -80,34 +113,65 @@ export async function GET(request: NextRequest) {
       `;
 
       if (!Array.isArray(vendorIdResult) || vendorIdResult.length === 0) {
-        await prisma.$executeRaw`
-          ALTER TABLE "Sale" 
-          ADD COLUMN "vendorId" TEXT REFERENCES "Vendor"("id") ON DELETE SET NULL ON UPDATE CASCADE
-        `;
-        results.push("Columna 'vendorId' agregada a la tabla Sale");
+        try {
+          await prisma.$executeRaw`
+            ALTER TABLE "Sale" 
+            ADD COLUMN "vendorId" TEXT REFERENCES "Vendor"("id") ON DELETE SET NULL ON UPDATE CASCADE
+          `;
+          results.push("✅ Columna 'vendorId' agregada a la tabla Sale");
+        } catch (columnError) {
+          const typedError = columnError as Error;
+          if (!typedError.message?.includes("already exists")) {
+            warnings.push(
+              `⚠️ Error al agregar columna 'vendorId': ${typedError.message}`
+            );
+          } else {
+            results.push("✅ La columna 'vendorId' ya existe en la tabla Sale");
+          }
+        }
       } else {
-        results.push("La columna 'vendorId' ya existe en la tabla Sale");
+        results.push("✅ La columna 'vendorId' ya existe en la tabla Sale");
+      }
+
+      // Verificar si existe la tabla _prisma_migrations
+      try {
+        const migrationTable = await prisma.$queryRaw`
+          SELECT table_name 
+          FROM information_schema.tables 
+          WHERE table_name = '_prisma_migrations'
+        `;
+
+        if (!Array.isArray(migrationTable) || migrationTable.length === 0) {
+          warnings.push(
+            "⚠️ Tabla _prisma_migrations no encontrada - algunas migraciones pueden no estar registradas"
+          );
+        }
+      } catch (tableError) {
+        warnings.push("⚠️ No se pudo verificar la tabla de migraciones");
       }
 
       return NextResponse.json({
         message: "Migraciones aplicadas exitosamente",
         results,
+        warnings,
+        status: "completed",
       });
-    } catch (error) {
-      const typedError = error as Error;
+    } catch (migrationError) {
+      const typedError = migrationError as Error;
       console.error("Error aplicando migraciones:", typedError);
-
-      // Si hay error pero queremos continuar, registrar y seguir
-      results.push(`Error parcial: ${typedError.message}`);
 
       return NextResponse.json(
         {
-          message: "Migración completada con algunos errores",
+          message: "Migración completada con advertencias",
           results,
-          error: typedError.message,
+          warnings: [
+            ...warnings,
+            `⚠️ Error general en migración: ${typedError.message}`,
+          ],
+          status: "completed_with_warnings",
         },
         { status: 200 }
-      ); // 200 para continuar aunque haya errores parciales
+      );
     }
   } catch (error) {
     console.error("Error en migración:", error);
@@ -115,8 +179,9 @@ export async function GET(request: NextRequest) {
     const typedError = error as Error;
     return NextResponse.json(
       {
-        error: "Error al ejecutar migración",
+        error: "Error crítico al ejecutar migración",
         details: typedError.message,
+        status: "error",
       },
       { status: 500 }
     );
