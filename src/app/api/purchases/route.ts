@@ -20,16 +20,23 @@ export async function GET(request: NextRequest) {
     const startDate = searchParams.get("startDate");
     const endDate = searchParams.get("endDate");
 
-    const where: Record<string, unknown> = {};
+    const where: {
+      vendorId?: string;
+      status?: string;
+      paymentStatus?: string;
+      createdAt?: {
+        gte?: Date;
+        lte?: Date;
+      };
+    } = {};
+
     if (vendorId) where.vendorId = vendorId;
     if (status) where.status = status;
     if (paymentStatus) where.paymentStatus = paymentStatus;
     if (startDate || endDate) {
       where.createdAt = {};
-      if (startDate)
-        (where.createdAt as Record<string, unknown>).gte = new Date(startDate);
-      if (endDate)
-        (where.createdAt as Record<string, unknown>).lte = new Date(endDate);
+      if (startDate) where.createdAt.gte = new Date(startDate);
+      if (endDate) where.createdAt.lte = new Date(endDate);
     }
 
     const purchases = await prisma.purchase.findMany({

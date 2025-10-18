@@ -35,7 +35,15 @@ export async function getAuditLogs(filters: {
   endDate?: Date;
   limit?: number;
 }) {
-  const where: Record<string, unknown> = {};
+  const where: {
+    userId?: string;
+    entityType?: string;
+    action?: string;
+    createdAt?: {
+      gte?: Date;
+      lte?: Date;
+    };
+  } = {};
 
   if (filters.userId) where.userId = filters.userId;
   if (filters.entityType) where.entityType = filters.entityType;
